@@ -14,10 +14,13 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
 
     private final FingerprintManager mFingerprintManager;
     private final Callback mCallback;
+    private int failCount = 0;
+    private int maxFailCount;
 
-    public FingerprintHandler(Context context, Callback callback) {
+    public FingerprintHandler(Context context, Callback callback, int maxFailCount) {
         mFingerprintManager = context.getSystemService(FingerprintManager.class);
         mCallback = callback;
+        this.maxFailCount = maxFailCount;
     }
 
     public void startAuth(FingerprintManager.CryptoObject cryptoObject) {
@@ -40,8 +43,11 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
 
     @Override
     public void onAuthenticationFailed() {
-        mCallback.onError("failed", FingerprintAuthConstants.AUTHENTICATION_FAILED);
-        cancelAuthenticationSignal();
+        failCount++;
+        if (failCount >= maxFailCount) {
+            mCallback.onError("failed", FingerprintAuthConstants.AUTHENTICATION_FAILED);
+            cancelAuthenticationSignal();
+        }
     }
 
     @Override
@@ -64,5 +70,7 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
         void onError(String errorString, int errorCode);
 
         void onCancelled();
+
+        void onFallback();
     }
 }

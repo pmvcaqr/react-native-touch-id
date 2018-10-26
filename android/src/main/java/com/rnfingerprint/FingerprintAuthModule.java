@@ -6,6 +6,7 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
+import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -59,8 +60,10 @@ public class FingerprintAuthModule extends ReactContextBaseJavaModule implements
 
         int result = isFingerprintAuthAvailable();
         if (result == FingerprintAuthConstants.IS_SUPPORTED) {
+            Log.e("AUTH", "supported");
             reactSuccessCallback.invoke("Is supported.");
         } else {
+            Log.e("AUTH", "not supported");
             reactErrorCallback.invoke("Not supported.", result);
         }
     }
