@@ -31,7 +31,14 @@ RCT_EXPORT_METHOD(authenticate: (NSString *)reason
         NSString *fallbackLabel = [RCTConvert NSString:options[@"fallbackLabel"]];   
         context.localizedFallbackTitle = fallbackLabel;
     }
-
+    if (RCTNilIfNull([options objectForKey:@"cancelText"]) != nil) {
+        NSString *cancelTitle = [RCTConvert NSString:options[@"cancelText"]];
+        if (@available(iOS 10, *)) {
+            context.localizedCancelTitle = cancelTitle;
+        } else {
+            // iOS 10 or older code
+        }
+    }
     // Device has TouchID
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
         // Attempt Authentification

@@ -27,12 +27,14 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
     private String dialogTitle = "";
     private String cancelText = "";
     private String sensorDescription = "";
+    private String fallbackLabel = "";
+    private int maxFailCount = 3;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        this.mFingerprintHandler = new FingerprintHandler(context, this);
+        this.mFingerprintHandler = new FingerprintHandler(context, this, this.maxFailCount);
     }
 
     @Override
@@ -69,6 +71,15 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
             mCancelButton.setTextColor(this.dialogColor);
         }
 
+        final Button fallbackButton = v.findViewById(R.id.fallback_button);
+        fallbackButton.setText(this.fallbackLabel);
+        fallbackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onFallback();
+            }
+        });
+
         getDialog().setTitle(this.dialogTitle);
         getDialog().setOnKeyListener(new DialogInterface.OnKeyListener() {
             public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
@@ -87,11 +98,9 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
     @Override
     public void onResume() {
         super.onResume();
-
         if (this.isAuthInProgress) {
             return;
         }
-
         this.isAuthInProgress = true;
         this.mFingerprintHandler.startAuth(mCryptoObject);
     }
@@ -136,6 +145,12 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
         if (config.hasKey("color")) {
             this.dialogColor = config.getInt("color");
         }
+        if (config.hasKey("fallbackLabel")) {
+            this.fallbackLabel = config.getString("fallbackLabel");
+        }
+        if (config.hasKey("maxFailCount")) {
+            this.maxFailCount = config.getInt("maxFailCount");
+        }
     }
 
     public interface DialogResultListener {
@@ -144,6 +159,8 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
         void onError(String errorString, int errorCode);
 
         void onCancelled();
+
+        void onFallback();
     }
 
     @Override
@@ -165,6 +182,14 @@ public class FingerprintDialog extends DialogFragment implements FingerprintHand
         this.isAuthInProgress = false;
         this.mFingerprintHandler.endAuth();
         this.dialogCallback.onCancelled();
+        dismiss();
+    }
+
+    @Override
+    public void onFallback() {
+        this.isAuthInProgress = false;
+        this.mFingerprintHandler.endAuth();
+        this.dialogCallback.onFallback();
         dismiss();
     }
 }
